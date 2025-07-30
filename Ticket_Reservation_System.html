@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>KCET Ticket Reservation - Royal Theme</title>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+ * { box-sizing: border-box; }
+ body {
+ font-family: 'Poppins', sans-serif;
+ margin: 0;
+ padding: 0;
+ background: #1e1b2f;
+ color: #f0e9ff;
+ }
+ header {
+ background: #3e2c5d;
+ padding: 20px 0;
+ text-align: center;
+ color: #ffd700;
+ box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+ }
+ nav {
+ display: flex;
+ justify-content: center;
+ gap: 16px;
+ flex-wrap: wrap;
+ padding: 20px;
+ background: #2e2542;
+ }
+ nav button {
+ background: #5f4b8b;
+ border: none;
+ padding: 10px 18px;
+ border-radius: 8px;
+ font-weight: bold;
+ color: #ffd700;
+ cursor: pointer;
+ transition: background 0.3s;
+ }
+ nav button.active,
+ nav button:hover {
+ background: #8c6bb1;
+ }
+ #content {
+ max-width: 500px;
+ background: #2a233d;
+ margin: 30px auto;
+ padding: 25px;
+ border-radius: 16px;
+ box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+ animation: fadeIn 0.4s ease;
+ }
+ @keyframes fadeIn {
+ from { opacity: 0; transform: translateY(20px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+ form {
+ display: flex;
+ flex-direction: column;
+ gap: 16px;
+ }
+ label {
+ font-weight: 600;
+ color: #ffd700;
+ }
+ input, select {
+ padding: 10px 14px;
+ border: none;
+ border-radius: 8px;
+ font-size: 1rem;
+ background: #4d3b72;
+ color: #fffde7;
+ }
+ input:focus, select:focus {
+ outline: 2px solid #ffd700;
+ }
+ button[type=submit] {
+ background: #ffd700;
+ color: #1e1b2f;
+ font-weight: bold;
+ padding: 12px;
+ border: none;
+ border-radius: 10px;
+ cursor: pointer;
+ transition: background 0.3s;
+ }
+ button[type=submit]:hover {
+ background: #e6c200;
+ }
+ #ticket-count {
+ text-align: center;
+ margin-top: 30px;
+ font-size: 1.2rem;
+ color: #ffd700;
+ }
+ table {
+ width: 90%;
+ margin: 20px auto;
+ border-collapse: separate;
+ border-spacing: 0 10px;
+ }
+ th, td {
+ padding: 14px 20px;
+ text-align: left;
+ }
+ thead th {
+ background: #5f4b8b;
+ color: #ffd700;
+ border-radius: 8px 8px 0 0;
+ }
+ tbody tr {
+ background: #3e2c5d;
+ border-radius: 8px;
+ }
+ tbody tr:hover {
+ background: #4f3b72;
+ }
+ .cancel-btn {
+ background: #ff6f61;
+ border: none;
+ color: white;
+ padding: 6px 10px;
+ border-radius: 6px;
+ cursor: pointer;
+ margin-top: 6px;
+ }
+ .cancel-btn:hover {
+ background: #d94b3d;
+ }
+ .ticket-row {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ }
+ .ticket-img {
+ width: 48px;
+ height: auto;
+ border-radius: 8px;
+ }
+ </style>
+</head>
+<body>
+<header>
+ <h1>KCET Ticket Reservation</h1>
+</header>
+<nav>
+ <button class="active" data-form="movie">Movie</button>
+ <button data-form="event">Event</button>
+ <button data-form="bus">Bus</button>
+ <button data-form="train">Train</button>
+</nav>
+<section id="content" aria-live="polite"></section>
+<h2 id="ticket-count">Total Tickets Booked: 0</h2>
+<table>
+ <thead>
+ <tr><th>Ticket Type</th><th>Details</th></tr>
+ </thead>
+ <tbody id="tickets-body">
+ <tr><td colspan="2" style="text-align:center; color:#ffd700; font-style:italic;">No tickets booked 
+yet.</td></tr>
+ </tbody>
+</table>
+<script>
+ const content = document.getElementById('content');
+ const navButtons = document.querySelectorAll('nav button');
+ const ticketsTableBody = document.getElementById('tickets-body');
+ const ticketCount = document.getElementById('ticket-count');
+ let tickets = JSON.parse(localStorage.getItem('kcetRoyalTickets')) || [];
+ const forms = {
+ movie: `
+ <h2>Book Movie Ticket</h2>
+ <form id="booking-form">
+ <label>Movie Name</label>
+ <input type="text" name="movieName" required />
+ <label>Show Time</label>
+ <select name="showTime" required>
+ <option value="" disabled selected>Select show time</option>
+ <option>10:00 AM</option><option>1:00 PM</option>
+ <option>4:00 PM</option><option>7:00 PM</option>
+ </select>
+ <button type="submit">Book Ticket</button>
+ </form>
+ `,
+ event: `
+ <h2>Book Event Ticket</h2>
+ <form id="booking-form">
+ <label>Event Name</label>
+ <input type="text" name="eventName" required />
+ <label>Event Date</label>
+ <input type="date" name="eventDate" required />
+ <button type="submit">Book Ticket</button>
+ </form>
+ `,
+ bus: `
+ <h2>Book Bus Ticket</h2>
+ <form id="booking-form">
+ <label>Source City</label>
+ <input type="text" name="source" required />
+ <label>Destination City</label>
+ <input type="text" name="destination" required />
+ <label>Travel Date</label>
+ <input type="date" name="travelDate" required />
+ <button type="submit">Book Ticket</button>
+ </form>
+ `,
+ train: `
+ <h2>Book Train Ticket</h2>
+ <form id="booking-form">
+ <label>Source Station</label>
+ <input type="text" name="trainSource" required />
+ <label>Destination Station</label>
+ <input type="text" name="trainDestination" required />
+ <label>Travel Date</label>
+ <input type="date" name="trainDate" required />
+ <button type="submit">Book Ticket</button>
+ </form>
+ `
+ };
+ function loadForm(formName) {
+ navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.form === formName));
+ content.innerHTML = forms[formName];
+ const form = document.getElementById('booking-form');
+ form.addEventListener('submit', e => {
+ e.preventDefault();
+ let details = '';
+ switch (formName) {
+ case 'movie':
+ details = `Movie: ${form.movieName.value}, Time: ${form.showTime.value}`;
+ break;
+ case 'event':
+ details = `Event: ${form.eventName.value}, Date: ${formatDate(form.eventDate.value)}`;
+ break;
+ case 'bus':
+ details = `From: ${form.source.value} To: ${form.destination.value}, Date: 
+${formatDate(form.travelDate.value)}`;
+ break;
+ case 'train':
+ details = `From: ${form.trainSource.value} To: ${form.trainDestination.value}, Date: 
+${formatDate(form.trainDate.value)}`;
+ break;
+ }
+ tickets.unshift({ type: capitalize(formName), details });
+ saveTickets();
+ updateTicketsTable();
+ alert(`${capitalize(formName)} ticket booked successfully!`);
+ form.reset();
+ });
+ }
+ function updateTicketsTable() {
+ ticketCount.innerText = `Total Tickets Booked: ${tickets.length}`;
+ if (tickets.length === 0) {
+ ticketsTableBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#ffd700; fontstyle:italic;">No tickets booked yet.</td></tr>`;
+ return;
+ }
+ ticketsTableBody.innerHTML = tickets.map((t, i) => `
+ <tr>
+ <td>${t.type}</td>
+ <td>
+ <div class="ticket-row">
+ <div>
+ ${t.details}<br />
+ <button class="cancel-btn" onclick="deleteTicket(${i})">Cancel</button>
+ </div>
+ </div>
+ </td>
+ </tr>
+ `).join('');
+ }
+ function deleteTicket(index) {
+ if (confirm("Are you sure you want to cancel this ticket?")) {
+ tickets.splice(index, 1);
+ saveTickets();
+ updateTicketsTable();
+ }
+ }
+ function formatDate(inputDate) {
+ return new Date(inputDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 
+'numeric' });
+ }
+ function capitalize(str) {
+ return str.charAt(0).toUpperCase() + str.slice(1);
+ }
+ function saveTickets() {
+ localStorage.setItem('kcetRoyalTickets', JSON.stringify(tickets));
+ }
+ // Initial load
+ loadForm('movie');
+ updateTicketsTable();
+ navButtons.forEach(btn => {
+ btn.addEventListener('click', () => {
+ if (!btn.classList.contains('active')) {
+ loadForm(btn.dataset.form);
+ }
+ });
+ });
+</script>
+</body>
+</html> 
